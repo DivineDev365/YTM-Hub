@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>YTM-Hub Remote</title>
+    <style>
+        :root {
+            --bg-color: #0f0f0f;
+            --surface-color: #212121;
+            --text-color: #f1f1f1;
+            --accent-color: #ff0000;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 50px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: var(--text-color);
+        }
+        .controls {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        button {
+            background-color: var(--surface-color);
+            border: none;
+            border-radius: 50%;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        button:active {
+            transform: scale(0.95);
+            background-color: #333333;
+        }
+        .play-pause {
+            width: 90px;
+            height: 90px;
+            background-color: var(--text-color);
+        }
+        .play-pause svg {
+            fill: var(--bg-color);
+            width: 40px;
+            height: 40px;
+        }
+        .play-pause:active {
+            background-color: #cccccc;
+        }
+        svg {
+            fill: var(--text-color);
+            width: 30px;
+            height: 30px;
+        }
+        
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            width: 80%;
+            max-width: 300px;
+        }
+        .volume-container svg {
+            width: 24px;
+            height: 24px;
+            fill: #aaa;
+        }
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: #333;
+            border-radius: 3px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: var(--text-color);
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -7px;
+        }
+    </style>
+</head>
+<body>
+    <h1>YTM-HUB</h1>
+    
+    <!-- Volume slider is now above the playback controls -->
+    <div class="volume-container">
+        <div id="muteBtn" style="cursor: pointer; display: flex; align-items: center;" aria-label="Mute">
+            <svg id="volumeIcon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+        </div>
+        <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5">
+    </div>
+
+    <div class="controls" style="margin-top: 50px;">
+        <button onclick="sendCommand('previous')" aria-label="Previous">
+            <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+        </button>
+        
+        <button class="play-pause" id="playPauseBtn" onclick="sendCommand('playpause')" aria-label="Play/Pause">
+            <svg id="playPauseIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        
+        <button onclick="sendCommand('next')" aria-label="Next">
+            <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+        </button>
+    </div>
+
+    <script>
+        const playPauseIcon = document.getElementById('playPauseIcon');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const muteBtn = document.getElementById('muteBtn');
+        const volumeIcon = document.getElementById('volumeIcon');
+        
+        const playPath = "M8 5v14l11-7z";
+        const pausePath = "M6 19h4V5H6v14zm8-14v14h4V5h-4z";
+        const volHighPath = "M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z";
+        const volMutedPath = "M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z";
+
+        let isDraggingVolume = false;
+        let savedVolume = 0.5;
+
+        function updateVolumeIcon() {
+            if (volumeSlider.value == 0) {
+                volumeIcon.innerHTML = `<path d="${volMutedPath}"/>`;
+            } else {
+                volumeIcon.innerHTML = `<path d="${volHighPath}"/>`;
+            }
+        }
+
+        let pendingVolume = null;
+        let isSendingVolume = false;
+
+        function sendVolume() {
+            if (pendingVolume === null || isSendingVolume) return;
+            isSendingVolume = true;
+            let vol = pendingVolume;
+            pendingVolume = null;
+            fetch(`/api/volume?level=${vol}`, { method: 'POST' })
+                .finally(() => {
+                    isSendingVolume = false;
+                    if (pendingVolume !== null) sendVolume();
+                });
+        }
+
+        muteBtn.addEventListener('click', () => {
+            if (navigator.vibrate) navigator.vibrate(50);
+            if (volumeSlider.value > 0) {
+                savedVolume = volumeSlider.value;
+                volumeSlider.value = 0;
+            } else {
+                volumeSlider.value = savedVolume > 0 ? savedVolume : 0.5;
+            }
+            pendingVolume = volumeSlider.value;
+            sendVolume();
+            updateVolumeIcon();
+        });
+
+        function sendCommand(action) {
+            if (navigator.vibrate) navigator.vibrate(50);
+            fetch(`/api/${action}`, { method: 'POST' }).catch(err => console.error(err));
+        }
+
+        volumeSlider.addEventListener('input', (e) => {
+            isDraggingVolume = true;
+            updateVolumeIcon();
+            pendingVolume = e.target.value;
+            sendVolume();
+        });
+
+        volumeSlider.addEventListener('change', () => {
+            isDraggingVolume = false;
+        });
+
+        function updateState() {
+            fetch('/api/state')
+                .then(res => res.json())
+                .then(data => {
+                    playPauseIcon.innerHTML = `<path d="${data.isPlaying ? pausePath : playPath}"/>`;
+                    if (!isDraggingVolume) {
+                        volumeSlider.value = data.volume;
+                        updateVolumeIcon();
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+
+        setInterval(updateState, 1000);
+        updateState();
+    </script>
+</body>
+</html>
