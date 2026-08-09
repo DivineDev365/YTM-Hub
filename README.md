@@ -9,7 +9,7 @@ YTM Hub takes the web experience of YouTube Music and wraps it into a premium Wi
 ## ✨ Features
 
 - **Modern WinUI 3 Interface**: Glassmorphism, Mica backdrops, and native Windows 11 styling.
-- **Remote Control Web App**: Control Play/Pause, Next, Previous, and Volume directly from your phone.
+- **Remote Control Web App**: Control Play/Pause, Next, Previous, and Volume directly from your phone. Works seamlessly over any **WiFi or Mobile Hotspot** network.
 - **QR Code Pairing**: A built-in flyout generates a QR code so you can instantly connect your phone's browser to the desktop app.
 - **Portable & Standalone**: Fully compiled as a single `.NET` executable. No installation required.
 - **Zero-Pollution**: Uses isolated `LocalAppData` for WebView2 storage to ensure your portable folder stays clean.
@@ -32,7 +32,7 @@ Want to control your music from the couch?
 1. Open **YTM Hub** on your PC.
 2. Click the **Remote Server Toggle** in the top-right corner of the title bar and make sure that the local server toggle is turned on.
 3. A QR code will drop down. Scan it with your phone's camera!
-4. Your phone's web browser will open a sleek web remote. You can now control the volume, skip tracks, and pause playback wirelessly.
+4. Your phone's web browser will open a sleek web remote. You can now control the volume, skip tracks, and pause playback wirelessly (works over **WiFi** and **Mobile Hotspot** networks!).
 
 ## 🛠️ Building from Source
 
